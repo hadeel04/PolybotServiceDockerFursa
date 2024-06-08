@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  polybot:
+    image: ${POLYBOT_IMG_NAME}
+    container_name: telegram_bot
+    ports:
+      - "8443:8443"
+    environment:
+      - TELEGRAM_APP_URL=${TELEGRAM_APP_URL}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - BUCKET_NAME=${BUCKET_NAME}
+    depends_on:
+      - yolo5
+      - mongo1
+      - mongo2
+      - mongo3
+    networks:
+      - app_network
+    volumes:
+      - type: bind
+        source: /home/hadeelarshed/.aws/credentials
+        target: /root/.aws/credentials
+
+  yolo5:
+    image: ${YOLO5_IMG_NAME}
+    container_name: yolo5
+    ports:
+      - "8081:8081"
+    environment:
+      - BUCKET_NAME=${BUCKET_NAME}
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+    networks:
+      - app_network
+    volumes:
+      - type: bind
+        source: /home/hadeelarshed/.aws/credentials
+        target: /root/.aws/credentials
+
+  mongo1:
+    image: mongo:4.4
+    container_name: mongo1
+    ports:
+      - "27017:27017"
+    command: mongod --replSet myReplicaSet --bind_ip_all
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo1:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - app_network
+
+  mongo2:
+    image: mongo:4.4
+    container_name: mongo2
+    ports:
+      - "27018:27017"
+    command: mongod --replSet myReplicaSet --bind_ip_all
+    depends_on:
+      - mongo1
+    networks:
+      - app_network
+
+  mongo3:
+    image: mongo:4.4
+    container_name: mongo3
+    ports:
+      - "27019:27017"
+    command: mongod --replSet myReplicaSet --bind_ip_all
+    depends_on:
+      - mongo1
+    networks:
+      - app_network
+
+  mongo-init:
+    image: mongo:4.4
+    depends_on:
+      mongo1:
+        condition: service_healthy
+    command: >
+      mongo --host mongo1 --eval "
+      rs.initiate({
+        _id: 'myReplicaSet',
+        members: [
+          {_id: 0, host: 'mongo1'},
+          {_id: 1, host: 'mongo2'},
+          {_id: 2, host: 'mongo3'}
+        ]
+      });"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

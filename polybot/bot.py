@@ -3,6 +3,8 @@ from loguru import logger
 import os
 import time
 from telebot.types import InputFile
+import boto3
+import requests
 
 
 class Bot:
@@ -66,12 +68,68 @@ class Bot:
 
 
 class ObjectDetectionBot(Bot):
+
+    def __init__(self, token, telegram_chat_url):
+        super().__init__(token, telegram_chat_url)
+        self.s3 = boto3.client('s3')
+        self.bucket_name = os.environ['BUCKET_NAME']
+        self.yolo5_url = "http://yolo5:8081"
+
+    def upload_to_s3(self, file_path , chat_id):
+        file_name = os.path.basename(file_path)
+        try:
+            self.s3.upload_file(file_path, self.bucket_name, file_name)
+            logger.info(f"Uploaded {file_name} to S3 bucket {self.bucket_name}")
+            self.send_text(chat_id, "Image successfully uploaded to S3.")
+            return file_name
+        except Exception as e:
+            logger.error(f"Error uploading to S3: {e}")
+            return None
+
+    def get_yolo5_prediction(self, img_name):
+        url = f"{self.yolo5_url}/predict?imgName={img_name}"
+        try:
+            response = requests.post(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(f"Yolo5 prediction failed with status code {response.status_code}: {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Error requesting Yolo5 prediction: {e}")
+            return None
+
+    def format_prediction_message(self, prediction):
+        if not prediction:
+            return "Sorry, I couldn't detect any objects in your image."
+
+        objects = {}
+        for label in prediction['labels']:
+            objects[label['class']] = objects.get(label['class'], 0) + 1
+
+        object_list = [f"{count} {obj}" for obj, count in objects.items()]
+        return "I found the following objects in your image: " + ", ".join(object_list) + "."
+
     def handle_message(self, msg):
         logger.info(f'Incoming message: {msg}')
 
         if self.is_current_msg_photo(msg):
             photo_path = self.download_user_photo(msg)
+            chat_id = msg['chat']['id']
 
-            # TODO upload the photo to S3
-            # TODO send an HTTP request to the `yolo5` service for prediction
-            # TODO send the returned results to the Telegram end-user
+            # Upload the photo to S3
+            s3_image_name = self.upload_to_s3(photo_path , chat_id)
+            if not s3_image_name:
+                self.send_text(chat_id, "Sorry, I couldn't upload your image. Please try again.")
+                return
+
+            # Send an HTTP request to the `yolo5` service for prediction
+            prediction = self.get_yolo5_prediction(s3_image_name)
+            if not prediction:
+                self.send_text(chat_id, "Sorry, I couldn't process your image. Please try again.")
+                return
+
+            # Format and send the results to the Telegram end-user
+            result_message = self.format_prediction_message(prediction)
+            self.send_text(chat_id, result_message)
+
