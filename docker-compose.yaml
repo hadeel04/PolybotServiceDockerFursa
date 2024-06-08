@@ -18,9 +18,7 @@ services:
     networks:
       - app_network
     volumes:
-      - type: bind
-        source: /home/hadeelarshed/.aws/credentials
-        target: /root/.aws/credentials
+      -  /home/hadeelarshed/.aws/credentials:/root/.aws/credentials
 
   yolo5:
     image: ${YOLO5_IMG_NAME}
@@ -36,9 +34,7 @@ services:
     networks:
       - app_network
     volumes:
-      - type: bind
-        source: /home/hadeelarshed/.aws/credentials
-        target: /root/.aws/credentials
+      - /home/hadeelarshed/.aws/credentials:/root/.aws/credentials
 
   mongo1:
     image: mongo:4.4
