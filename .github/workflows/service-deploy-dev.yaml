@@ -6,7 +6,8 @@ on:
       - dev
 
 env:
-  BOT_INSTANCE_DOMAIN: dev.mydomain.click  # TODO replace to your bot domain
+  BOT_INSTANCE_DOMAIN: dev-bot.hadeeldomain.com
+  EC2_PUBLIC_IP: 3.141.6.6
 
 jobs:
   PolybotBuild:
@@ -69,8 +70,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             # You deployment script here...
+            echo "$EC2_SSH_PRIVATE_KEY" > mykey.pem
+            chmod 400 mykey.pem
+            rsync -avz -e "ssh -i mykey.pem -o StrictHostKeyChecking=no" ./ ubuntu@$EC2_PUBLIC_IP:/home/ubuntu/PolybotServiceDockerFursa
             
-            cd PolybotService/
+            cd PolybotServiceDockerFursa/
             
             # Save telegram bot token in a secret file, to be used in docker-compose.yaml
             echo -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" > telegram_bot_token.secret
