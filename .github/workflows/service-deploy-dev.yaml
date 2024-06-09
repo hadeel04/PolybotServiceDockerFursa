@@ -7,7 +7,6 @@ on:
 
 env:
   BOT_INSTANCE_DOMAIN: dev-bot.hadeeldomain.com
-  EC2_PUBLIC_IP: 3.141.6.6
 
 jobs:
   PolybotBuild:
@@ -62,7 +61,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: docker-compose.yaml
-          target: PolybotService/
+          target: PolybotServiceDockerFursa/
 
       - name: Update the Docker Compose project in the EC2
         uses: appleboy/ssh-action@master
@@ -72,9 +71,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             # You deployment script here...
-            echo "$EC2_SSH_PRIVATE_KEY" > mykey.pem
-            chmod 400 mykey.pem
-            rsync -avz -e "ssh -i mykey.pem -o StrictHostKeyChecking=no" ./ ubuntu@$EC2_PUBLIC_IP:/home/ubuntu/PolybotServiceDockerFursa
+            #echo "$EC2_SSH_PRIVATE_KEY" > mykey.pem
+            #chmod 400 mykey.pem
+            #rsync -avz -e "ssh -i mykey.pem -o StrictHostKeyChecking=no" ./ ubuntu@$EC2_PUBLIC_IP:/home/ubuntu/PolybotServiceDockerFursa
             
             cd PolybotServiceDockerFursa/
             
@@ -83,9 +82,11 @@ jobs:
             
             # Generate .env file
             echo """
-            POLYBOT_IMG_NAME=polybot:${{ github.run_number }}
-            YOLO5_IMG_NAME=yolo5:${{ github.run_number }}
-            TELEGRAM_APP_URL=$BOT_INSTANCE_DOMAIN
+            POLYBOT_IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.run_number }}
+            YOLO5_IMG_NAME=${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.run_number }}
+            TELEGRAM_APP_URL=${{ env.BOT_INSTANCE_DOMAIN }}:8443
+            TELEGRAM_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            BUCKET_NAME=${{ secrets.BUCKET_NAME }}
             """ > .env
             
             # Take the service down
@@ -93,3 +94,12 @@ jobs:
             
             # Take it up with the current updated values
             docker compose up -d
+            sleep 20
+            docker exec -it mongo1 mongo --eval "rs.initiate({
+                       _id: \"myReplicaSet\",
+                       members: [
+                         {_id: 0, host: \"mongo1\"},
+                         {_id: 1, host: \"mongo2\"},
+                         {_id: 2, host: \"mongo3\"}
+                       ]
+                      })"
