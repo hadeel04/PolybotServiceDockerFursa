@@ -91,7 +91,7 @@ jobs:
             
             # Take it up with the current updated values
             sudo docker compose up -d
-            sleep 20
+            sleep 40
             sudo docker exec -it mongo1 mongo --eval "rs.initiate({
                        _id: \"myReplicaSet\",
                        members: [
@@ -100,3 +100,4 @@ jobs:
                          {_id: 2, host: \"mongo3\"}
                        ]
                       })"
+            
