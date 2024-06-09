@@ -92,5 +92,5 @@ jobs:
             # Take it up with the current updated values
             sudo docker compose up -d
             sleep 30
-            /bin/bash /home/ubuntu/init_replica
+            /bin/bash /home/ubuntu/init_replica.sh
             
