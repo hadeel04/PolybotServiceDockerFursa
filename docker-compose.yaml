@@ -7,7 +7,7 @@ services:
       - "8443:8443"
     environment:
       - TELEGRAM_APP_URL=${TELEGRAM_APP_URL}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - BUCKET_NAME=${BUCKET_NAME}
     depends_on:
       - yolo5
@@ -36,56 +36,33 @@ services:
       - /home/hadeelarshed/.aws/credentials:/root/.aws/credentials
 
   mongo1:
-    image: mongo:4.4
+    image: mongo:4
     container_name: mongo1
     ports:
       - "27017:27017"
-    command: mongod --replSet myReplicaSet --bind_ip_all
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo1:27017/test --quiet
-      interval: 10s
-      timeout: 10s
-      retries: 5
+    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip" , "localhost,mongo1"]
     networks:
       - app_network
 
   mongo2:
-    image: mongo:4.4
+    image: mongo:4
     container_name: mongo2
     ports:
       - "27018:27017"
-    command: mongod --replSet myReplicaSet --bind_ip_all
+    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip" , "localhost,mongo2"]
     depends_on:
       - mongo1
     networks:
       - app_network
 
   mongo3:
-    image: mongo:4.4
+    image: mongo:4
     container_name: mongo3
     ports:
       - "27019:27017"
-    command: mongod --replSet myReplicaSet --bind_ip_all
+    command: ["mongod", "--replSet", "myReplicaSet", "--bind_ip" , "localhost,mongo3"]
     depends_on:
       - mongo1
-    networks:
-      - app_network
-
-  mongo-init:
-    image: mongo:4.4
-    depends_on:
-      mongo1:
-        condition: service_healthy
-    command: >
-      mongo --host mongo1 --eval "
-      rs.initiate({
-        _id: 'myReplicaSet',
-        members: [
-          {_id: 0, host: 'mongo1'},
-          {_id: 1, host: 'mongo2'},
-          {_id: 2, host: 'mongo3'}
-        ]
-      });"
     networks:
       - app_network
 
