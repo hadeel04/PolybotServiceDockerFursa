@@ -71,6 +71,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             # You deployment script here...
+            
             if [ -d "PolybotServiceDockerFursa" ]; then
                 rm -rf "PolybotServiceDockerFursa"
             fi
