@@ -71,7 +71,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             # You deployment script here...
-
+            
             cd PolybotServiceDockerFursa/
             
             # Save telegram bot token in a secret file, to be used in docker-compose.yaml
