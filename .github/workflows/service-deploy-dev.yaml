@@ -71,7 +71,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             # You deployment script here...
-            
+             
             cd PolybotServiceDockerFursa/
             
             # Save telegram bot token in a secret file, to be used in docker-compose.yaml
@@ -87,10 +87,10 @@ jobs:
             """ > .env
             
             # Take the service down
-            sudo docker compose down
+            docker compose down
             
             # Take it up with the current updated values
-            sudo docker compose up -d
+            docker compose up -d
             sleep 20
             /bin/bash /home/ubuntu/init_replica.sh
             

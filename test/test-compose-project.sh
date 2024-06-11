@@ -4,9 +4,9 @@ echo -e "\n\n\n-----------------------------------------------------------------
 echo "Test Case I: There are at least 5 containers running as part of a Docker Compose project"
 echo -e "-----------------------------------------------------------------------------------------------------------------"
 
-RUNNING_CONTAINERS=$(docker ps --filter "status=running" --filter "label=com.docker.compose.project" -q | wc -l)
+RUNNING_CONTAINERS=$(sudo docker ps --filter "status=running" --filter "label=com.docker.compose.project" -q | wc -l)
 
-docker ps --filter "status=running" --filter "label=com.docker.compose.project"
+sudo docker ps --filter "status=running" --filter "label=com.docker.compose.project"
 
 if [ "$RUNNING_CONTAINERS" -lt "5" ]; then
   echo "Found less then 5 running containers"
@@ -19,9 +19,9 @@ echo -e "\n\n\n-----------------------------------------------------------------
 echo "Test Case II: There are 3 running MongoDB containers"
 echo -e "-----------------------------------------------------------------------------------------------------------------"
 
-MONGO_CONTAINER_IDS=$(docker ps --filter "status=running" --filter "label=com.docker.compose.project" --format '{{.ID}} {{.Image}}' | grep "mongo:.*" | awk '{print $1}')
+MONGO_CONTAINER_IDS=$(sudo docker ps --filter "status=running" --filter "label=com.docker.compose.project" --format '{{.ID}} {{.Image}}' | grep "mongo:.*" | awk '{print $1}')
 
-docker ps --filter "status=running" --filter "label=com.docker.compose.project"
+sudo docker ps --filter "status=running" --filter "label=com.docker.compose.project"
 
 if ! [ "$(echo "$MONGO_CONTAINER_IDS" | wc -l)" -eq "3" ]; then
   echo "Three running mongo containers were not found"
@@ -38,7 +38,7 @@ SOME_MONGO_CONTAINER_ID=$(echo "$MONGO_CONTAINER_IDS" | head -n 1)
 
 echo "Connecting to container $SOME_MONGO_CONTAINER_ID and check the replicaSet status:"
 
-rs_status=$(docker exec $SOME_MONGO_CONTAINER_ID mongo --eval "rs.status()")
+rs_status=$(sudo docker exec $SOME_MONGO_CONTAINER_ID mongo --eval "rs.status()")
 
 echo "$rs_status"
 
