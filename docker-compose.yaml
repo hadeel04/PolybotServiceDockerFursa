@@ -17,7 +17,7 @@ services:
     networks:
       - app_network
     volumes:
-      -  /home/hadeelarshed/.aws/credentials:/root/.aws/credentials
+      -  $HOME/.aws/credentials:/root/.aws/credentials
 
   yolo5:
     image: ${YOLO5_IMG_NAME}
@@ -33,7 +33,7 @@ services:
     networks:
       - app_network
     volumes:
-      - /home/hadeelarshed/.aws/credentials:/root/.aws/credentials
+      - $HOME/.aws/credentials:/root/.aws/credentials
 
   mongo1:
     image: mongo:4

@@ -23,5 +23,5 @@ def webhook():
 
 if __name__ == "__main__":
     bot = ObjectDetectionBot(TELEGRAM_TOKEN, TELEGRAM_APP_URL)
-
-    app.run(host='0.0.0.0', port=8443)
+    ssl_context = ('cert.pem', 'key.key')
+    app.run(host='0.0.0.0', port=8443, ssl_context=ssl_context)
