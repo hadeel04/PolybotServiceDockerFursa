@@ -6,7 +6,7 @@ on:
       - dev
 
 env:
-  BOT_INSTANCE_DOMAIN: dev-bot.hadeeldomain.com
+  BOT_INSTANCE_DOMAIN: prod-bot.hadeeldomain.com
 
 jobs:
   PolybotBuild:
