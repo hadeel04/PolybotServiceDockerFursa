@@ -89,7 +89,6 @@ jobs:
             # Take the service down
             sudo docker compose down
             
-            
             # Take it up with the current updated values
             sudo docker compose up -d
             sleep 30
